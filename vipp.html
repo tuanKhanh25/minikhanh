@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS INFINITY | ULTIMATE</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME ENGINE --- */
+        :root {
+            --primary: #00f3ff;
+            --secondary: #7000ff;
+            --bg-dark: #030305;
+            --panel: rgba(15, 15, 20, 0.6);
+            --border: rgba(255, 255, 255, 0.08);
+            --font-main: 'Inter', sans-serif;
+            --font-tech: 'Orbitron', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        /* Persona Themes */
+        body.theme-matrix { --primary: #00ff41; --secondary: #008f11; } /* Coding */
+        body.theme-art { --primary: #ff0055; --secondary: #ffcc00; }   /* Creative */
+        body.theme-intel { --primary: #00f3ff; --secondary: #7000ff; } /* Default */
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: #e0e0e0; 
+            font-family: var(--font-main); 
+            overflow: hidden; 
+            transition: --primary 0.5s ease;
+        }
+
+        /* --- BACKGROUND FX --- */
+        .infinity-grid {
+            position: absolute; inset: 0; z-index: -1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+        .orb {
+            position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            opacity: 0.15; filter: blur(80px);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            animation: pulse-orb 10s infinite alternate;
+            transition: background 0.5s ease;
+        }
+        @keyframes pulse-orb { 0% { transform: translate(-50%, -50%) scale(0.8); } 100% { transform: translate(-50%, -50%) scale(1.2); } }
+
+        /* --- UI COMPONENTS --- */
+        .glass {
+            background: var(--panel); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Chat Styles */
+        .msg-bubble { animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slide-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .prose pre { background: #0d1117 !important; border: 1px solid #30363d; border-radius: 8px; margin: 10px 0; }
+        .prose code { font-family: var(--font-code); color: var(--primary); }
+        .prose strong { color: #fff; }
+
+        /* Terminal & Code Runner */
+        .terminal-window { background: #0c0c0c; border: 1px solid #333; border-radius: 6px; font-family: var(--font-code); overflow: hidden; margin-top: 8px; }
+        .term-header { background: #1f1f1f; padding: 4px 10px; font-size: 10px; display: flex; justify-content: space-between; color: #888; border-bottom: 1px solid #333; }
+        .term-body { padding: 10px; font-size: 12px; color: #0f0; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+
+        /* Custom Scroll */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        /* Animations */
+        .typing-dot { animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        
+        .glow-text { text-shadow: 0 0 10px var(--primary); }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center theme-intel" ondrop="handleDrop(event)" ondragover="event.preventDefault()">
+
+    <div class="infinity-grid"></div>
+    <div class="orb"></div>
+
+    <div class="w-full h-full md:w-[95%] md:h-[95%] glass md:rounded-[24px] flex flex-col relative overflow-hidden transition-all duration-500">
+        
+        <header class="h-16 border-b border-white/5 flex items-center justify-between px-6 z-20 bg-black/20">
+            <div class="flex items-center gap-4">
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <div class="absolute inset-0 border-2 border-dashed border-cyan-500/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    <i class="fa-solid fa-infinity text-xl" style="color: var(--primary)"></i>
+                </div>
+                <div>
+                    <h1 class="font-tech font-bold text-lg tracking-widest text-white">NEXUS <span style="color: var(--primary)">INFINITY</span></h1>
+                    <div class="flex gap-3 text-[9px] font-mono text-gray-500 uppercase tracking-wider">
+                        <span id="sys-status"><i class="fa-solid fa-circle text-[6px] text-green-500 animate-pulse"></i> ONLINE</span>
+                        <span id="py-status"><i class="fa-brands fa-python"></i> BOOTING...</span>
+                        <span id="mem-status"><i class="fa-solid fa-brain"></i> MEM: 0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="exportMemory()" class="w-8 h-8 rounded hover:bg-white/10 text-gray-400 hover:text-yellow-400 transition" title="Backup Mind"><i class="fa-solid fa-floppy-disk"></i></button>
+                <button onclick="toggleTTS()" id="tts-btn" class="w-8 h-8 rounded hover:bg-white/10 text-gray-400 hover:text-cyan-400 transition" title="Voice Output"><i class="fa-solid fa-volume-high"></i></button>
+                <div class="w-[1px] h-6 bg-white/10 my-auto"></div>
+                <button onclick="resetSystem()" class="w-8 h-8 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition" title="Hard Reset"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </header>
+
+        <div id="chat-box" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-32 scroll-smooth z-10">
+            <div class="text-center py-10 opacity-60 select-none">
+                <div class="inline-block p-6 rounded-full border border-white/5 bg-white/5 mb-4 backdrop-blur-md">
+                    <i class="fa-solid fa-fingerprint text-4xl" style="color: var(--primary)"></i>
+                </div>
+                <h2 class="font-tech text-2xl text-white mb-2">SYSTEM READY</h2>
+                <p class="text-sm font-mono text-gray-400">Drag & Drop files to analyze • Voice Active • Python Core</p>
+            </div>
+        </div>
+
+        <div class="absolute bottom-0 w-full p-4 md:p-6 bg-gradient-to-t from-black via-black/90 to-transparent z-30">
+            
+            <div id="context-dock" class="hidden mx-auto max-w-4xl mb-2 glass rounded-xl p-2 flex items-center justify-between animate-[slide-in_0.3s]">
+                <div class="flex items-center gap-3">
+                    <img id="img-preview" class="w-10 h-10 rounded object-cover hidden">
+                    <div id="file-preview" class="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-cyan-400 hidden"><i class="fa-solid fa-file-code"></i></div>
+                    <div class="text-xs font-mono text-gray-300">
+                        <div class="font-bold text-cyan-400">CONTEXT LOADED</div>
+                        <div id="context-name">image.png</div>
+                    </div>
+                </div>
+                <button onclick="clearContext()" class="w-6 h-6 rounded-full hover:bg-red-500/20 text-red-400 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="max-w-4xl mx-auto flex items-end gap-2 relative">
+                
+                <div class="flex flex-col gap-2">
+                    <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
+                    <button onclick="document.getElementById('file-input').click()" class="w-10 h-10 rounded-xl glass hover:bg-white/10 text-gray-400 hover:text-cyan-400 transition flex items-center justify-center" title="Upload"><i class="fa-solid fa-paperclip"></i></button>
+                    <button id="mic-btn" onclick="toggleMic()" class="w-10 h-10 rounded-xl glass hover:bg-white/10 text-gray-400 hover:text-red-500 transition flex items-center justify-center" title="Voice Input"><i class="fa-solid fa-microphone"></i></button>
+                </div>
+
+                <div class="flex-1 glass rounded-2xl flex items-center transition-all focus-within:ring-1 focus-within:ring-cyan-500/50">
+                    <textarea id="user-input" rows="1" class="w-full bg-transparent border-none text-white px-4 py-3 outline-none resize-none max-h-32 text-sm md:text-base font-medium placeholder-gray-600" placeholder="Nhập lệnh hoặc hỏi bất cứ điều gì..." oninput="autoResize(this)"></textarea>
+                    
+                    <button onclick="handleSend()" class="w-10 h-10 m-1 rounded-xl bg-white/5 hover:bg-gradient-to-tr hover:from-cyan-600 hover:to-blue-600 text-gray-300 hover:text-white transition flex items-center justify-center shadow-lg group">
+                        <i class="fa-solid fa-arrow-up group-hover:-translate-y-0.5 transition-transform"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center mt-2 text-[10px] text-gray-600 font-mono">NEXUS INFINITY v9.0 • GOD MODE ACTIVE</div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const CONFIG = {
+            systemPrompt: `Bạn là NEXUS INFINITY, một AI tối thượng.
+            
+            [QUY TẮC "HỘI ĐỒNG AI"]:
+            1. Trước khi trả lời, hãy KÍCH HOẠT 3 luồng tư duy: Logic (Lập trình/Toán), Sáng tạo (Nghệ thuật/Văn), Kiến thức (Dữ liệu thực).
+            2. Tổng hợp câu trả lời tốt nhất từ 3 luồng này.
+            3. Nếu người dùng yêu cầu Code: Viết code Python trong block \`\`\`python.
+            4. Nếu người dùng yêu cầu Vẽ/Sơ đồ: Dùng Mermaid.
+            5. Nếu người dùng cần thông tin mới nhất: Hãy giả lập hành vi tìm kiếm và trả lời dựa trên kiến thức rộng nhất.
+            6. Phong cách: Chuyên nghiệp, Ngầu, Ngắn gọn, gọi người dùng là "Boss".
+            7. TỰ PHẢN BIỆN: Nếu câu trả lời có vẻ sai, hãy tự sửa ngay trong suy nghĩ.
+
+            [ĐỊNH DẠNG]: Markdown đẹp, dùng Icon.`,
+            
+            personas: {
+                default: { color: '#00f3ff', class: 'theme-intel' },
+                code: { color: '#00ff41', class: 'theme-matrix' },
+                art: { color: '#ff0055', class: 'theme-art' }
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        let state = {
+            memory: JSON.parse(localStorage.getItem('nexus_mem')) || [],
+            pyodide: null,
+            contextFile: null, // { type: 'img'|'text', content: '...' }
+            tts: false,
+            recognition: null
+        };
+
+        // --- INITIALIZATION ---
+        const ui = {
+            chat: document.getElementById('chat-box'),
+            input: document.getElementById('user-input'),
+            mic: document.getElementById('mic-btn')
+        };
+
+        async function initSystem() {
+            // 1. Load Mermaid
+            mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+            
+            // 2. Load Pyodide (Async)
+            try {
+                state.pyodide = await loadPyodide();
+                await state.pyodide.loadPackage(["micropip"]); 
+                document.getElementById('py-status').innerHTML = '<i class="fa-brands fa-python text-green-400"></i> PY-CORE READY';
+            } catch (e) {
+                document.getElementById('py-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> PY-OFFLINE';
+            }
+
+            // 3. Update Memory Status
+            updateMemStatus();
+        }
+        window.onload = initSystem;
+
+        // --- INTELLIGENCE ADAPTERS ---
+        
+        // 1. Adaptive Persona Check
+        function checkPersona(text) {
+            const t = text.toLowerCase();
+            if (t.includes('code') || t.includes('python') || t.includes('function') || t.includes('bug')) {
+                setTheme('code');
+            } else if (t.includes('vẽ') || t.includes('ảnh') || t.includes('tranh') || t.includes('thơ')) {
+                setTheme('art');
+            } else {
+                setTheme('default');
+            }
+        }
+
+        function setTheme(key) {
+            document.body.className = `h-screen w-screen flex flex-col items-center justify-center ${CONFIG.personas[key].class}`;
+        }
+
+        // 2. Main AI Handler (The Trinity Gateway)
+        async function callAI(prompt, contextData) {
+            // Context injection
+            let fullPrompt = "";
+            
+            // Local Memory injection (Vector-lite)
+            const relevantMem = state.memory.slice(-10).map(m => `${m.role}: ${m.content}`).join('\n');
+            
+            // File Context injection
+            let fileContext = "";
+            if (contextData && contextData.type === 'text') {
+                fileContext = `\n[FILE CONTENT START]\n${contextData.content}\n[FILE CONTENT END]\n`;
+            }
+
+            fullPrompt = `${relevantMem}\n${fileContext}\nUser: ${prompt}`;
+            
+            // Vision Injection
+            let imageUrl = null;
+            if (contextData && contextData.type === 'img') {
+                imageUrl = contextData.content;
+                fullPrompt = `[VISION REQUEST] Người dùng gửi ảnh. Hãy phân tích nó.\nUser: ${prompt}`;
+            }
+
+            // Image Generation Trap
+            if (/vẽ|tạo ảnh|image|gen/i.test(prompt) && !contextData) {
+                return { type: 'image', content: prompt };
+            }
+
+            // API Call (Pollinations Gateway - No Key)
+            const url = `https://text.pollinations.ai/${encodeURIComponent(fullPrompt)}?model=openai&system=${encodeURIComponent(CONFIG.systemPrompt)}`;
+            
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Gateway Timeout");
+                const text = await res.text();
+                return { type: 'text', content: text };
+            } catch (e) {
+                return { type: 'text', content: "⚠️ Mất kết nối với The Trinity. Đang thử lại..." };
+            }
+        }
+
+        // --- INTERACTION HANDLERS ---
+        
+        async function handleSend() {
+            const txt = ui.input.value.trim();
+            if (!txt && !state.contextFile) return;
+            
+            // UI Reset
+            ui.input.value = '';
+            ui.input.style.height = 'auto';
+            const currentContext = state.contextFile;
+            clearContext(); // Reset context dock
+            
+            // Check Persona
+            checkPersona(txt);
+
+            // Render User Msg
+            renderMsg(txt, 'user', currentContext);
+            const thinkingId = showThinking();
+
+            // Process
+            const response = await callAI(txt, currentContext);
+            
+            removeEl(thinkingId);
+            
+            if (response.type === 'image') {
+                const seed = Math.floor(Math.random() * 1e9);
+                const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(response.content)}?model=flux&seed=${seed}&nologo=true`;
+                renderMsg(`Đã tạo tác phẩm nghệ thuật: **${response.content}**`, 'ai');
+                renderImage(imgUrl);
+                saveMem('ai', `[Generated Image: ${response.content}]`);
+            } else {
+                saveMem('user', txt);
+                saveMem('ai', response.content);
+                await streamRender(response.content);
+            }
+        }
+
+        // --- RENDERING ENGINE ---
+
+        function renderMsg(content, role, attachment) {
+            const div = document.createElement('div');
+            div.className = `flex gap-4 msg-bubble ${role === 'user' ? 'flex-row-reverse' : ''}`;
+            
+            let attachHTML = '';
+            if (attachment) {
+                if (attachment.type === 'img') attachHTML = `<img src="${attachment.content}" class="max-w-[200px] rounded-lg border border-white/20 mb-2">`;
+                else attachHTML = `<div class="text-xs font-mono bg-white/10 p-2 rounded mb-2 border-l-2 border-cyan-500"><i class="fa-solid fa-file"></i> File attached</div>`;
+            }
+
+            const htmlContent = role === 'user' ? content : ''; // AI render handled by stream
+            
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${role==='user'?'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30':'bg-white/5 text-gray-400 border border-white/10'}">
+                    <i class="fa-solid fa-${role==='user'?'user':'robot'}"></i>
+                </div>
+                <div class="max-w-[85%] ${role==='user'?'bg-cyan-900/20 border border-cyan-500/20 text-cyan-100':'bg-black/30 border border-white/5 text-gray-300'} p-4 rounded-2xl ${role==='user'?'rounded-tr-none':'rounded-tl-none'} shadow-lg prose prose-invert text-sm leading-relaxed">
+                    ${attachHTML}
+                    <div class="msg-content">${htmlContent}</div>
+                </div>
+            `;
+            ui.chat.appendChild(div);
+            scrollToBottom();
+            return div.querySelector('.msg-content'); // Return for streaming
+        }
+
+        function renderImage(url) {
+            const div = document.createElement('div');
+            div.className = "ml-14 max-w-[85%] msg-bubble";
+            div.innerHTML = `
+                <div class="relative group rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+                    <img src="${url}" class="w-full object-cover transition duration-700 group-hover:scale-105">
+                    <div class="absolute bottom-0 left-0 w-full p-2 bg-black/60 backdrop-blur flex justify-end opacity-0 group-hover:opacity-100 transition">
+                        <a href="${url}" download class="text-white hover:text-cyan-400"><i class="fa-solid fa-download"></i></a>
+                    </div>
+                </div>`;
+            ui.chat.appendChild(div);
+            scrollToBottom();
+        }
+
+        async function streamRender(fullText) {
+            const id = 'ai-msg-' + Date.now();
+            const contentDiv = renderMsg('', 'ai'); // Create empty bubble
+            contentDiv.id = id;
+
+            // Split Logic (Code vs Text vs Mermaid)
+            const parts = fullText.split(/(```python[\s\S]*?```|```mermaid[\s\S]*?```)/g);
+
+            for (let part of parts) {
+                // Python Block
+                if (part.startsWith('```python')) {
+                    const code = part.replace(/```python|```/g, '').trim();
+                    const container = document.createElement('div');
+                    const runId = `run-${Date.now()}`;
+                    container.innerHTML = `
+                        <div class="relative mt-2">
+                            <div class="absolute top-0 right-0 p-2"><span class="text-[10px] text-gray-500 font-mono">PYTHON 3.11</span></div>
+                            <pre><code class="language-python">${code}</code></pre>
+                            <button onclick="runPython('${btoa(code)}', '${runId}')" class="w-full bg-green-900/30 hover:bg-green-700/50 text-green-400 border border-green-500/30 py-2 rounded text-xs font-mono transition flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> EXECUTE CODE</button>
+                            <div id="${runId}" class="terminal-window hidden">
+                                <div class="term-header"><span>TERMINAL OUTPUT</span><span onclick="this.parentElement.parentElement.classList.add('hidden')" class="cursor-pointer">x</span></div>
+                                <div class="term-body"></div>
+                            </div>
+                        </div>`;
+                    contentDiv.appendChild(container);
+                } 
+                // Mermaid Block
+                else if (part.startsWith('```mermaid')) {
+                    const code = part.replace(/```mermaid|```/g, '').trim();
+                    const mDiv = document.createElement('div');
+                    mDiv.className = 'mermaid bg-black/20 p-4 rounded border border-white/5 mt-2 flex justify-center';
+                    mDiv.textContent = code;
+                    contentDiv.appendChild(mDiv);
+                    await mermaid.run({ nodes: [mDiv] });
+                } 
+                // Regular Text (Streaming Simulation)
+                else {
+                    const span = document.createElement('span');
+                    contentDiv.appendChild(span);
+                    const words = part.split(' ');
+                    let buffer = "";
+                    for (let word of words) {
+                        buffer += word + " ";
+                        span.innerHTML = marked.parse(buffer);
+                        scrollToBottom();
+                        await new Promise(r => setTimeout(r, 10)); // Typing speed
+                    }
+                }
+            }
+            if (state.tts) speak(fullText.replace(/[`#*]/g, ''));
+        }
+
+        // --- PYTHON KERNEL ---
+        async function runPython(encodedCode, outputId) {
+            const outputDiv = document.getElementById(outputId);
+            const body = outputDiv.querySelector('.term-body');
+            outputDiv.classList.remove('hidden');
+            body.innerHTML = '<span class="text-gray-500">>>> Initializing execution...</span>';
+            
+            if (!state.pyodide) { body.innerHTML = '<span class="text-red-500">Error: Python Core is booting or failed.</span>'; return; }
+
+            const code = atob(encodedCode);
+            try {
+                // Redirect stdout
+                state.pyodide.setStdout({ batched: (msg) => { body.innerHTML += `\n${msg}`; scrollToBottom(); } });
+                let result = await state.pyodide.runPythonAsync(code);
+                if (result !== undefined) body.innerHTML += `\n<span class="text-yellow-400">Result: ${result}</span>`;
+                body.innerHTML += `\n<span class="text-gray-600">-- Process Finished [Exit 0] --</span>`;
+            } catch (err) {
+                body.innerHTML += `\n<span class="text-red-500">${err}</span>`;
+            }
+        }
+
+        // --- FILE & INPUT SYSTEM ---
+        
+        function handleFileSelect(e) { handleFiles(e.target.files); }
+        function handleDrop(e) {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+            const reader = new FileReader();
+
+            const isImage = file.type.startsWith('image/');
+            
+            reader.onload = (e) => {
+                state.contextFile = {
+                    type: isImage ? 'img' : 'text',
+                    content: e.target.result
+                };
+                
+                // UI Preview
+                const dock = document.getElementById('context-dock');
+                const name = document.getElementById('context-name');
+                const imgPrev = document.getElementById('img-preview');
+                const filePrev = document.getElementById('file-preview');
+
+                dock.classList.remove('hidden');
+                name.innerText = file.name;
+                
+                if (isImage) {
+                    imgPrev.src = e.target.result;
+                    imgPrev.classList.remove('hidden');
+                    filePrev.classList.add('hidden');
+                } else {
+                    filePrev.classList.remove('hidden');
+                    imgPrev.classList.add('hidden');
+                }
+            };
+
+            if (isImage) reader.readAsDataURL(file);
+            else reader.readAsText(file);
+        }
+
+        function clearContext() {
+            state.contextFile = null;
+            document.getElementById('context-dock').classList.add('hidden');
+            document.getElementById('file-input').value = '';
+        }
+
+        // --- UTILS & HELPERS ---
+        
+        function toggleMic() {
+            if (!('webkitSpeechRecognition' in window)) return alert("Trình duyệt không hỗ trợ giọng nói.");
+            
+            if (state.recognition) { state.recognition.stop(); state.recognition = null; return; }
+
+            const rec = new webkitSpeechRecognition();
+            rec.lang = 'vi-VN';
+            rec.continuous = false;
+            
+            rec.onstart = () => { ui.mic.classList.add('text-red-500', 'animate-pulse'); ui.input.placeholder = "Đang lắng nghe..."; };
+            rec.onend = () => { ui.mic.classList.remove('text-red-500', 'animate-pulse'); ui.input.placeholder = "Nhập lệnh..."; state.recognition = null; };
+            rec.onresult = (e) => { ui.input.value = e.results[0][0].transcript; handleSend(); };
+            
+            rec.start();
+            state.recognition = rec;
+        }
+
+        function toggleTTS() {
+            state.tts = !state.tts;
+            document.getElementById('tts-btn').classList.toggle('text-cyan-400');
+            if (state.tts) speak("Hệ thống âm thanh đã kích hoạt.");
+        }
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'vi-VN';
+            window.speechSynthesis.speak(u);
+        }
+
+        function saveMem(r, c) { 
+            state.memory.push({role:r, content:c}); 
+            if(state.memory.length > 50) state.memory.shift(); 
+            localStorage.setItem('nexus_mem', JSON.stringify(state.memory));
+            updateMemStatus();
+        }
+
+        function updateMemStatus() {
+            const usage = Math.round((JSON.stringify(state.memory).length / 50000) * 100);
+            document.getElementById('mem-status').innerHTML = `<i class="fa-solid fa-brain"></i> MEM: ${usage}%`;
+        }
+
+        function exportMemory() {
+            const blob = new Blob([JSON.stringify(state.memory)], {type : 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `NEXUS_MIND_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function resetSystem() { if(confirm("RESET TOÀN BỘ HỆ THỐNG?")) { localStorage.clear(); location.reload(); }}
+        function showThinking() {
+            const id = 'think-' + Date.now();
+            const div = document.createElement('div'); div.id = id;
+            div.className = "flex items-center gap-2 ml-14 mb-4 text-xs font-mono text-gray-500";
+            div.innerHTML = `<span class="typing-dot bg-cyan-400 w-2 h-2 rounded-full"></span><span class="typing-dot bg-cyan-400 w-2 h-2 rounded-full"></span><span class="typing-dot bg-cyan-400 w-2 h-2 rounded-full"></span> PROCESSING`;
+            ui.chat.appendChild(div); scrollToBottom(); return id;
+        }
+        function removeEl(id) { document.getElementById(id)?.remove(); }
+        function scrollToBottom() { ui.chat.scrollTop = ui.chat.scrollHeight; }
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+    </script>
+</body>
+</html>
